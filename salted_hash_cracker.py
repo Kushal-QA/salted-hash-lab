@@ -1,32 +1,4 @@
 #!/usr/bin/env python3
-"""
-Lab 08 - Salted Hashes: password recovery investigation
-SecureComm / MSc Cybersecurity
-
-Scenario
---------
-A set of user accounts was recovered with SHA-1 *salted* hashes. The hash is
-built as:  digest = SHA1( salt + password )
-where the salt is the site domain found in the case data: www.exploringsecurity.com
-
-Password policy recovered from the case notes:
-  * Accounts last modified BEFORE ~May 2010 : digits only, 5-7 characters
-  * Accounts last modified AFTER  ~May 2010 : alphanumeric, 5-7 characters
-
-Strategy
---------
-1. Identify the algorithm from the digest length (40 hex = 20 bytes = SHA-1).
-2. Use the per-account "last modified" date to pick the correct charset/length,
-   which massively shrinks the search space (this is the point of the lab:
-   investigate first, brute force second).
-3. Run a staged attack: cheap keyspaces first (digits, then common passwords,
-   then lowercase, then lowercase+digits) before anything expensive.
-
-Note on salting: because every hash uses the same site-wide salt, precomputed
-rainbow tables for plain SHA-1 do not work -- the attacker must re-hash each
-guess WITH the salt. A per-user random salt would have made this even harder.
-"""
-
 import hashlib
 import itertools
 import string
@@ -34,7 +6,6 @@ import time
 
 SALT = "www.exploringsecurity.com"
 
-# username -> (sha1 hex digest, last-modified date, policy)
 ACCOUNTS = {
     "security": ("fafa4483874ec051989d53e1e432ba3a6c6b9143", "2010-01-11", "digits"),
     "Tomtom":   ("06f6fe0f73c6e197ee43eff4e5f7d10fb9e438b2", "2009-12-03", "digits"),
@@ -45,12 +16,11 @@ ACCOUNTS = {
 }
 
 
-def salted_sha1(password: str) -> str:
-    """The exact construction used by the target system: SHA1(salt + password)."""
+def salted_sha1(password):
     return hashlib.sha1((SALT + password).encode()).hexdigest()
 
 
-def try_password(password: str, remaining: dict, cracked: dict) -> None:
+def try_password(password, remaining, cracked):
     digest = salted_sha1(password)
     for user in list(remaining):
         if digest == remaining[user]:
@@ -60,7 +30,6 @@ def try_password(password: str, remaining: dict, cracked: dict) -> None:
 
 
 def attack_digits(remaining, cracked, max_len=7):
-    """Digit-only policy (pre-2010 accounts). Keyspace up to 10^7 -- trivial."""
     print("[*] Stage 1: digit-only brute force (5-7 digits)")
     for length in range(5, max_len + 1):
         if not remaining:
@@ -72,14 +41,12 @@ def attack_digits(remaining, cracked, max_len=7):
 
 
 def attack_common(remaining, cracked):
-    """Common/weak passwords and username-derived guesses (cheap dictionary)."""
     print("[*] Stage 2: common-password dictionary")
     common = """
     qwerty password abc123 123abc letmein monkey dragon shadow master
     superman batman trustno1 iloveyou welcome sunshine princess football
     baseball hello freedom whatever jordan harley ranger buster hunter
     """.split()
-    # include the usernames themselves (Mark123 reuses its username as password)
     common += list(ACCOUNTS.keys())
     for base in set(common):
         for variant in {base, base.lower(), base.capitalize()}:
@@ -90,7 +57,6 @@ def attack_common(remaining, cracked):
 
 
 def attack_charset(remaining, cracked, charset, label, max_len=7):
-    """Generic staged brute force over a charset, shortest length first."""
     print(f"[*] Stage: {label} brute force")
     for length in range(5, max_len + 1):
         if not remaining:
@@ -115,13 +81,9 @@ def main():
     t0 = time.time()
     attack_digits(remaining, cracked)
     attack_common(remaining, cracked)
-    # alphanumeric accounts: escalate charset only as needed
     attack_charset(remaining, cracked, string.ascii_lowercase, "lowercase a-z", max_len=6)
     attack_charset(remaining, cracked, string.ascii_lowercase + string.digits,
                    "lowercase + digits", max_len=6)
-    # final (expensive) tier -- full alphanumeric; run with care
-    # attack_charset(remaining, cracked,
-    #                string.ascii_letters + string.digits, "full alphanumeric", max_len=6)
 
     print("\n" + "=" * 48)
     print("RESULTS")

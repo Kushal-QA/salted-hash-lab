@@ -1,25 +1,4 @@
 #!/usr/bin/env python3
-"""
-Lab 08 - Salted Hashes: password recovery investigation (OPTIMIZED)
-SecureComm / MSc Cybersecurity
-
-Same investigation logic as salted_hash_cracker.py, but the expensive
-charset brute-force stages now run in parallel across all CPU cores using
-multiprocessing, with a tight inner loop and early termination once every
-account has been recovered.
-
-Construction under attack:  digest = SHA1( salt + password )
-
-Speed notes
------------
-* The keyspace for a given length is split into one task per leading
-  character; a worker pool chews through those tasks across all cores.
-* The inner loop binds hashlib.sha1 and the encoded salt locally and
-  compares raw digest bytes (no hexdigest, no helper-function call per guess).
-* As soon as `remaining` is empty, the pool is terminated instead of
-  finishing the rest of the keyspace.
-"""
-
 import hashlib
 import itertools
 import string
@@ -29,7 +8,6 @@ from multiprocessing import Pool, cpu_count
 SALT = "www.exploringsecurity.com"
 SALT_BYTES = SALT.encode()
 
-# username -> (sha1 hex digest, last-modified date, policy)
 ACCOUNTS = {
     "security": ("fafa4483874ec051989d53e1e432ba3a6c6b9143", "2010-01-11", "digits"),
     "Tomtom":   ("06f6fe0f73c6e197ee43eff4e5f7d10fb9e438b2", "2009-12-03", "digits"),
@@ -39,17 +17,14 @@ ACCOUNTS = {
     "JillC":    ("f44f3b09df53c1c11273def13cacd8922a86d48c", "2010-12-20", "alnum"),
 }
 
-# Use all but one core so the machine stays responsive; at least 1.
 NUM_WORKERS = max(1, cpu_count() - 1)
 
 
-def salted_sha1(password: str) -> str:
-    """The exact construction used by the target system: SHA1(salt + password)."""
+def salted_sha1(password):
     return hashlib.sha1(SALT_BYTES + password.encode()).hexdigest()
 
 
-def try_password(password: str, remaining: dict, cracked: dict) -> None:
-    """Cheap single-guess check, used by the fast (non-parallel) stages."""
+def try_password(password, remaining, cracked):
     digest = salted_sha1(password)
     for user in list(remaining):
         if digest == remaining[user]:
@@ -59,7 +34,6 @@ def try_password(password: str, remaining: dict, cracked: dict) -> None:
 
 
 def attack_digits(remaining, cracked, max_len=7):
-    """Digit-only policy (pre-2010 accounts). Keyspace up to 10^7 -- trivial."""
     print("[*] Stage 1: digit-only brute force (5-7 digits)")
     for length in range(5, max_len + 1):
         if not remaining:
@@ -71,7 +45,6 @@ def attack_digits(remaining, cracked, max_len=7):
 
 
 def attack_common(remaining, cracked):
-    """Common/weak passwords and username-derived guesses (cheap dictionary)."""
     print("[*] Stage 2: common-password dictionary")
     common = """
     qwerty password abc123 123abc letmein monkey dragon shadow master
@@ -87,11 +60,7 @@ def attack_common(remaining, cracked):
                     return
 
 
-# --- Parallel charset brute force ------------------------------------------
-
-# Module-level globals set in each worker process via the pool initializer,
-# so large immutable data isn't pickled on every task.
-_W_TARGETS = None      # set of target digest *bytes*
+_W_TARGETS = None
 _W_CHARSET = None
 _W_LENGTH = None
 
@@ -104,8 +73,6 @@ def _worker_init(targets_bytes, charset, length):
 
 
 def _worker_scan(first_char):
-    """Scan every candidate of the configured length that starts with
-    `first_char`. Returns a list of (hexdigest, password) matches."""
     sha1 = hashlib.sha1
     salt = SALT_BYTES
     targets = _W_TARGETS
@@ -128,7 +95,6 @@ def _worker_scan(first_char):
 
 
 def attack_charset_parallel(remaining, cracked, charset, label, max_len=7):
-    """Parallel staged brute force over a charset, shortest length first."""
     print(f"[*] Stage: {label} brute force  ({NUM_WORKERS} workers)")
     for length in range(5, max_len + 1):
         if not remaining:
@@ -138,7 +104,6 @@ def attack_charset_parallel(remaining, cracked, charset, label, max_len=7):
         t0 = time.time()
 
         targets_bytes = {bytes.fromhex(h) for h in remaining.values()}
-        # Reverse map digest-hex -> user for reporting.
         hex_to_user = {h: u for u, h in remaining.items()}
 
         with Pool(processes=NUM_WORKERS,
@@ -153,7 +118,7 @@ def attack_charset_parallel(remaining, cracked, charset, label, max_len=7):
                             del remaining[user]
                             print(f"  [+] CRACKED {user:10s} = {password!r}")
                     if not remaining:
-                        pool.terminate()   # stop the other workers immediately
+                        pool.terminate()
                         break
             finally:
                 pool.terminate()
@@ -175,13 +140,11 @@ def main():
     t0 = time.time()
     attack_digits(remaining, cracked)
     attack_common(remaining, cracked)
-    # alphanumeric accounts: escalate charset only as needed
     attack_charset_parallel(remaining, cracked, string.ascii_lowercase,
                             "lowercase a-z", max_len=6)
     attack_charset_parallel(remaining, cracked,
                             string.ascii_lowercase + string.digits,
                             "lowercase + digits", max_len=6)
-    # final (expensive) tier -- full alphanumeric; uncomment to run
     attack_charset_parallel(remaining, cracked,
                             string.ascii_letters + string.digits,
                             "full alphanumeric", max_len=6)
