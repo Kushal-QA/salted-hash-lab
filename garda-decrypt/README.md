@@ -18,7 +18,6 @@ produced by a partially damaged Python 2 program (`original/encryptme.py`).
 | `output/plaintext.txt` | The recovered plaintext |
 | `output/test_results.txt` | Output of the final test run (all passing) |
 | `output/test_results_run1_failed.txt` | First test run, kept as evidence (one edge case failed; see below) |
-| `report/` | Assignment report (`report.md`, `report.pdf`) |
 
 ## How the encoding works
 
