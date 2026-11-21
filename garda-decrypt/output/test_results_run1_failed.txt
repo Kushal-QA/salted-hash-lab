@@ -1,0 +1,73 @@
+test_reproduce_intercepted_exactly (__main__.TestIntercepted.test_reproduce_intercepted_exactly) ... ok
+test_edge_cases (__main__.TestRoundTrip.test_edge_cases) ... 
+  test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=0) ... FAIL
+  test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=1) ... FAIL
+  test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=5) ... FAIL
+  test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=25) ... FAIL
+  test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=50) ... FAIL
+test_random_round_trips (__main__.TestRoundTrip.test_random_round_trips) ... ok
+test_inv_step2_rejects_bad_base64 (__main__.TestSteps.test_inv_step2_rejects_bad_base64) ... ok
+test_step1_is_rot13_and_self_inverse (__main__.TestSteps.test_step1_is_rot13_and_self_inverse) ... ok
+test_step2_inverse (__main__.TestSteps.test_step2_inverse) ... ok
+test_step3_only_shifts_lowercase (__main__.TestSteps.test_step3_only_shifts_lowercase) ... ok
+
+======================================================================
+FAIL: test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\kushk\Documents\salted-hash-lab\garda-decrypt\test_roundtrip.py", line 112, in test_edge_cases
+    self.assertEqual(pt, secret)
+AssertionError: '' != '2'
++ 2
+
+
+======================================================================
+FAIL: test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\kushk\Documents\salted-hash-lab\garda-decrypt\test_roundtrip.py", line 112, in test_edge_cases
+    self.assertEqual(pt, secret)
+AssertionError: '' != '2'
++ 2
+
+
+======================================================================
+FAIL: test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\kushk\Documents\salted-hash-lab\garda-decrypt\test_roundtrip.py", line 112, in test_edge_cases
+    self.assertEqual(pt, secret)
+AssertionError: '' != '2'
++ 2
+
+
+======================================================================
+FAIL: test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=25)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\kushk\Documents\salted-hash-lab\garda-decrypt\test_roundtrip.py", line 112, in test_edge_cases
+    self.assertEqual(pt, secret)
+AssertionError: '' != '2'
++ 2
+
+
+======================================================================
+FAIL: test_edge_cases (__main__.TestRoundTrip.test_edge_cases) (secret='2', count=50)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\kushk\Documents\salted-hash-lab\garda-decrypt\test_roundtrip.py", line 112, in test_edge_cases
+    self.assertEqual(pt, secret)
+AssertionError: '' != '2'
++ 2
+
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.397s
+
+FAILED (failures=5)
+
+  recovered plaintext: 'Why do elephants have big ears?'
+  re-applied 67 forward steps; rebuilt length 35138, intercepted length 35138, identical: True
+
+  random round trips: 1000 cases, seed 20261121, counts 0-50 (mean 24.4), secret length 1-199, failures 0
+  charset usage: digits=139, letters=148, letters+digits=145, letters+space=157, lowercase=111, printable=153, punctuation=147

@@ -1,0 +1,21 @@
+test_reproduce_intercepted_exactly (__main__.TestIntercepted.test_reproduce_intercepted_exactly) ... ok
+test_ambiguity_empty_vs_2 (__main__.TestRoundTrip.test_ambiguity_empty_vs_2) ... ok
+test_edge_cases (__main__.TestRoundTrip.test_edge_cases) ... ok
+test_random_round_trips (__main__.TestRoundTrip.test_random_round_trips) ... ok
+test_inv_step2_rejects_bad_base64 (__main__.TestSteps.test_inv_step2_rejects_bad_base64) ... ok
+test_step1_is_rot13_and_self_inverse (__main__.TestSteps.test_step1_is_rot13_and_self_inverse) ... ok
+test_step2_inverse (__main__.TestSteps.test_step2_inverse) ... ok
+test_step3_only_shifts_lowercase (__main__.TestSteps.test_step3_only_shifts_lowercase) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.382s
+
+OK
+
+  recovered plaintext: 'Why do elephants have big ears?'
+  re-applied 67 forward steps; rebuilt length 35138, intercepted length 35138, identical: True
+
+  make_secret("", 0) then one step2 round -> '2Mg=='; make_secret("2", 0) -> '2Mg=='
+
+  random round trips: 1000 cases, seed 20261121, counts 0-50 (mean 24.4), secret length 1-199, failures 0
+  charset usage: digits=139, letters=148, letters+digits=145, letters+space=157, lowercase=111, printable=153, punctuation=147
